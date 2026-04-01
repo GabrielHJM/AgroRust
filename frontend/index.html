@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AgroRust - Interface Principal</title>
+    <!-- Phaser 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <!-- FontAwesome SDK para ícones rústicos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- OVERLAY DE LOGIN (OPÇÃO 2) -->
+    <div id="login-overlay" class="auth-overlay">
+        <div class="auth-box">
+            <h2><i class="fa-solid fa-tractor"></i> AgroRust Login</h2>
+            <p>Seja bem-vindo, fazendeiro!</p>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="E-mail (ex: admin@agrorust.com)" required>
+                <input type="password" id="login-password" placeholder="Senha (ex: admin123)" required>
+                <button type="submit">Entrar na Fazenda</button>
+            </form>
+            <div id="login-error" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Main Grid Wrapper / Mobile First Layout -->
+    <div class="app-layout">
+        
+        <!-- 2. TOPO: HUD Estratégico (Fixa) -->
+        <header class="hud-top">
+            <div class="hud-left">
+                <div class="avatar-placeholder"><i class="fa-solid fa-user-astronaut"></i></div>
+                <div class="player-info">
+                    <span class="level">Nv. 12</span>
+                    <span class="energy" title="Estamina - Sementes"><i class="fa-solid fa-bolt"></i> <span id="energy-amount">--/--</span></span>
+                    <span class="gasoline" title="Gasolina - Máquinas"><i class="fa-solid fa-gas-pump"></i> <span id="gasoline-amount">--/--</span></span>
+                    <span id="shield-status" class="shield-active" style="display:none;" title="Escudo Ativo!"><i class="fa-solid fa-shield-halved"></i> ATIVO</span>
+                </div>
+            </div>
+            
+            <div class="hud-center">
+                <span class="clock" title="Tempo in-game"><i class="fa-regular fa-clock"></i> 14:30</span>
+                <span class="weather"><i class="fa-solid fa-cloud-sun weather-icon"></i></span>
+                <div class="ticker-wrapper" title="Cotações de Mercado">
+                    <span class="ticker"><i class="fa-solid fa-arrow-trend-up"></i> Milho +12%</span>
+                </div>
+            </div>
+            
+            <div class="hud-right">
+                <span class="gold" title="Moedas de Ouro"><i class="fa-solid fa-coins"></i> <span id="gold-amount">---</span></span>
+                <span class="gems" title="Gemas Premium"><i class="fa-regular fa-gem"></i> <span id="gems-amount">---</span></span>
+            </div>
+        </header>
+
+        <!-- Container Flex para a área central + Painéis Laterais Desktop -->
+        <main class="main-content">
+            
+            <!-- 5. LATERAL ESQUERDA: Galpão de Máquinas -->
+            <aside class="side-panel left-panel" id="panel-machines">
+                <div class="panel-header"><i class="fa-solid fa-warehouse"></i> Galpão</div>
+                <div class="panel-content">
+                    <div class="machine-item">
+                        <i class="fa-solid fa-tractor"></i>
+                        <span>Trator Colheitadeira A</span>
+                        <div class="status online">Disponível</div>
+                    </div>
+                    <div class="machine-item">
+                        <i class="fa-solid fa-truck"></i>
+                        <span>Caminhão de Carga</span>
+                        <div class="status maintenance">Em Manutenção (2h)</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 1. CENTRO: Área de Ação (Phaser Canvas) -->
+            <section id="game-container">
+                <div id="phaser-app"></div>
+            </section>
+
+            <!-- 4. LATERAL DIREITA: Sede / Armazém de Estoque -->
+            <aside class="side-panel right-panel" id="panel-warehouse">
+                <div class="panel-header"><i class="fa-solid fa-house-chimney"></i> Sede</div>
+                <div class="panel-content">
+                    <div class="warehouse-stats">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        <span>Armazém: 45/100 Lotes</span>
+                        <div class="progress-bar"><div class="fill" style="width: 45%;"></div></div>
+                    </div>
+                    <div class="house-stats">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Residência: Nv. 2</span>
+                        <small>Skin Equipada: Rústica</small>
+                    </div>
+                </div>
+            </aside>
+
+        </main>
+
+        <!-- Botões Flutuantes (Mobile) para puxar os Painéis Deslizantes -->
+        <button class="mobile-toggle-btn toggle-left" onclick="togglePanel('panel-machines')">
+            <i class="fa-solid fa-tractor"></i>
+        </button>
+        <button class="mobile-toggle-btn toggle-right" onclick="togglePanel('panel-warehouse')">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </button>
+
+        <!-- 3. RODAPÉ: Deck de Cartas / Inventário Real-time -->
+        <footer id="card-deck">
+            <div id="deck-loading" style="margin: auto; opacity: 0.7; font-size: 14px;">
+                <i class="fa-solid fa-sync fa-spin"></i> Conectando à Fazenda (Django API)...
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Lógica App -->
+    <script src="game.js"></script>
+    <script>
+        // Função de Slide-over nativo via CSS Toggle Class Toggle 
+        function togglePanel(id) {
+            const panel = document.getElementById(id);
+            panel.classList.toggle('open');
+            // UX: Fechar painéis opostos ao abrir um no celular para não se colidirem no meio
+            if (id === 'panel-machines') document.getElementById('panel-warehouse').classList.remove('open');
+            if (id === 'panel-warehouse') document.getElementById('panel-machines').classList.remove('open');
+        }
+    </script>
+</body>
+</html>
