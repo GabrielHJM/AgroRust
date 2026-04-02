@@ -4,28 +4,27 @@ from django.db import models
 from django.utils import timezone
 
 class UserManager(BaseUserManager):
-    """Define a model manager for User model with no username field."""
+    """Define a model manager for User model with username field."""
 
     use_in_migrations = True
 
-    def _create_user(self, email, password, **extra_fields):
-        """Create and save a User with the given email and password."""
-        if not email:
-            raise ValueError('The given email must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def _create_user(self, username, password, **extra_fields):
+        """Create and save a User with the given username and password."""
+        if not username:
+            raise ValueError('The given username must be set')
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, password=None, **extra_fields):
-        """Create and save a regular User with the given email and password."""
+    def create_user(self, username, password=None, **extra_fields):
+        """Create and save a regular User with the given username and password."""
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        return self._create_user(email, password, **extra_fields)
+        return self._create_user(username, password, **extra_fields)
 
-    def create_superuser(self, email, password, **extra_fields):
-        """Create and save a SuperUser with the given email and password."""
+    def create_superuser(self, username, password, **extra_fields):
+        """Create and save a SuperUser with the given username and password."""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -34,22 +33,27 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self._create_user(email, password, **extra_fields)
+        return self._create_user(username, password, **extra_fields)
 
 class User(AbstractUser):
     """User model."""
-    username = None
-    email = models.EmailField('email address', unique=True)
+    email = models.EmailField('email address', blank=True, null=True)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
 
 class PerfilJogador(models.Model):
+    CLIMAS = (
+        ('clear', 'Limpo'),
+        ('rain', 'Chuva'),
+        ('heat', 'Calor'),
+        ('storm', 'Tempestade'),
+    )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
     moedas_ouro = models.PositiveIntegerField(default=0, verbose_name="Moedas de Ouro")
     gemas_premium = models.PositiveIntegerField(default=0, verbose_name="Gemas Premium")
@@ -62,14 +66,36 @@ class PerfilJogador(models.Model):
     gasolina_maxima = models.PositiveIntegerField(default=100)
     gasolina_atual = models.PositiveIntegerField(default=100)
 
+    # Clima (AgroRust Modern Engine 2.5)
+    clima_atual = models.CharField(max_length=10, choices=CLIMAS, default='clear')
+    clima_vencimento = models.DateTimeField(default=timezone.now)
+
     # Defesa
     escudo_ate = models.DateTimeField(null=True, blank=True, verbose_name="Escudo de Proteção Até")
     
     # Controle de Tempo (Regeneração Lazy)
     ultima_atualizacao_recursos = models.DateTimeField(default=timezone.now)
 
+    def processar_clima(self):
+        """Randomiza o clima global do jogador de forma natural."""
+        agora = timezone.now()
+        if agora >= self.clima_vencimento:
+            import random
+            from datetime import timedelta
+            
+            # Pesos de Transição (Natural)
+            opcoes = ['clear', 'rain', 'heat', 'storm']
+            pesos = [40, 25, 25, 10] # 40% chance of clear, 10% storm
+            
+            self.clima_atual = random.choices(opcoes, weights=pesos, k=1)[0]
+            # Duração Aleatória: 2 a 10 minutos
+            duracao = random.randint(2, 10)
+            self.clima_vencimento = agora + timedelta(minutes=duracao)
+            self.save()
+
     def processar_regeneracao(self):
         """Calcula quanto de energia e gasolina deve ter regenerado desde o último acesso."""
+        self.processar_clima() # Garante clima atualizado
         agora = timezone.now()
         diff = agora - self.ultima_atualizacao_recursos
         minutos_passados = int(diff.total_seconds() // 60)
@@ -82,7 +108,7 @@ class PerfilJogador(models.Model):
             self.save()
 
     def __str__(self):
-        return f"Perfil de {self.user.email}"
+        return f"Perfil de {self.user.username} [{self.clima_atual}]"
 
 class CartasBase(models.Model):
     TIPOS_CARTAS = (
@@ -103,13 +129,15 @@ class CartasBase(models.Model):
     raridade = models.CharField(max_length=20, choices=RARIDADES)
     imagem_url = models.URLField(max_length=500, blank=True, null=True)
 
-    # Economia (AgroRust 2.1)
+    # Economia (AgroRust 2.1+)
     RECURSO_CHOICES = (
         ('estamina', 'Estamina (Energia)'),
         ('gasolina', 'Gasolina (Combustível)'),
     )
     recurso_tipo = models.CharField(max_length=15, choices=RECURSO_CHOICES, default='estamina')
     custo_recurso = models.PositiveIntegerField(default=5)
+    duracao_crescimento = models.PositiveIntegerField(default=5, help_text="Em minutos")
+    producao_estimada = models.PositiveIntegerField(default=20)
 
     def __str__(self):
         return f"{self.nome} ({self.get_raridade_display()})"
@@ -212,12 +240,31 @@ class TerrenoGrid(models.Model):
         
         # Regenera antes de gastar (AgroRust 2.1)
         self.perfil.processar_regeneracao()
+        perfil = self.perfil
 
-        # Lógica de Desconto de Recursos (AgroRust 2.1)
+        # Lógica de Desconto de Recursos (AgroRust 2.5: Impacto Climático)
         if not self.pk and self.carta:
-            perfil = self.perfil
             custo = self.carta.custo_recurso
             
+            # Impacto Calor: +2 no custo de plantio
+            if perfil.clima_atual == 'heat':
+                custo += 2
+                
+            # Impacto Chuva/Tempestade: Crescimento acelerado
+            from datetime import timedelta
+            self.plantado_em = timezone.now()
+            multiplicador_clima = 1.0
+            
+            if perfil.clima_atual == 'rain':
+                multiplicador_clima = 0.5 # 50% faster
+            elif perfil.clima_atual == 'storm':
+                multiplicador_clima = 0.3 # ~70% faster
+                
+            # Calcula data de conclusão
+            minutos_base = self.carta.duracao_crescimento
+            minutos_reais = max(1, int(minutos_base * multiplicador_clima))
+            self.conclui_em = self.plantado_em + timedelta(minutes=minutos_reais)
+
             if self.carta.recurso_tipo == 'estamina':
                 if perfil.energia_atual < custo:
                     raise ValidationError(f"Estamina insuficiente! Necessário: {custo}, Atual: {perfil.energia_atual}")

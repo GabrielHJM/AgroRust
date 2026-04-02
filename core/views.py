@@ -23,6 +23,11 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 class PerfilJogadorViewSet(viewsets.ModelViewSet):
     """API endpoint that allows profiles to be viewed or edited."""
     def get_queryset(self):
@@ -31,6 +36,35 @@ class PerfilJogadorViewSet(viewsets.ModelViewSet):
             p.processar_regeneracao()
         return qs
     serializer_class = PerfilJogadorSerializer
+
+    @action(detail=False, methods=['post'])
+    def novo_jogo(self, request):
+        perfil = getattr(request.user, 'perfil', None)
+        if not perfil:
+            return Response({"erro": "Perfil não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+        with transaction.atomic():
+            # Reset Economics
+            perfil.moedas_ouro = 1000
+            perfil.gemas_premium = 50
+            perfil.energia_atual = perfil.energia_maxima
+            perfil.gasolina_atual = perfil.gasolina_maxima
+            perfil.save()
+
+            # Clear Grid
+            TerrenoGrid.objects.filter(perfil=perfil).delete()
+            EdificioEspecial.objects.filter(perfil=perfil).delete()
+
+            # Clear Inventory & Give Starter Cards
+            InventarioCartas.objects.filter(perfil=perfil).delete()
+            starter_cards = CartasBase.objects.all()[:3] # Dá as 3 primeiras sementes/máquinas
+            for card in starter_cards:
+                InventarioCartas.objects.create(perfil=perfil, carta=card, quantidade=5, nivel=1)
+            
+            # Reset Warehouse
+            EstoqueArmazem.objects.filter(perfil=perfil).delete()
+
+        return Response({"mensagem": "Novo jogo iniciado! Sua fazenda foi resetada."}, status=status.HTTP_200_OK)
 
 class CartasBaseViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint for reading available base cards."""
@@ -218,6 +252,21 @@ class RaideViewSet(viewsets.ViewSet):
         return Response({
             "mensagem": f"Invasão concluída! Você saqueou {saque_final} moedas de ouro.",
             "ouro_saqueado": saque_final,
-            "vitima": vitima_perfil.user.email,
+            "vitima": vitima_perfil.user.username,
             "escudo_aplicado_na_vitima": "12 horas"
         })
+
+    @action(detail=False, methods=['get'])
+    def listar_rivais(self, request):
+        # Lista perfis que NÃO são o do próprio usuário
+        rivais = PerfilJogador.objects.exclude(user=request.user)
+        # Simplificando o retorno para a UI de seleção
+        data = []
+        for r in rivais:
+            data.append({
+                "id": r.id,
+                "username": r.user.username,
+                "ouro": r.moedas_ouro,
+                "protegido": r.escudo_ate and r.escudo_ate > timezone.now()
+            })
+        return Response(data)
