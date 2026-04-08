@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <!-- FontAwesome SDK para ícones rústicos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.0.1">
 </head>
 <body>
     
@@ -88,17 +88,23 @@
             
             <!-- 5. LATERAL ESQUERDA: Galpão de Máquinas -->
             <aside class="side-panel left-panel" id="panel-machines">
-                <div class="panel-header"><i class="fa-solid fa-warehouse"></i> Galpão</div>
+                <div class="panel-header"><i class="fa-solid fa-warehouse"></i> Galpão de Máquinas</div>
                 <div class="panel-content">
-                    <div class="machine-item">
-                        <i class="fa-solid fa-tractor"></i>
-                        <span>Trator Colheitadeira A</span>
-                        <div class="status online">Disponível</div>
+                    <div class="category-title">Frota Ativa</div>
+                    <div id="machines-list">
+                        <div class="machine-item-premium">
+                            <div class="machine-icon"><i class="fa-solid fa-tractor"></i></div>
+                            <div class="machine-details">
+                                <span class="machine-name">Trator Industrial A1</span>
+                                <span class="machine-status online">Operando</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="machine-item">
-                        <i class="fa-solid fa-truck"></i>
-                        <span>Caminhão de Carga</span>
-                        <div class="status maintenance">Em Manutenção (2h)</div>
+                    
+                    <div class="category-title">Implementos</div>
+                    <div class="implements-grid">
+                        <div class="implement-tag"><i class="fa-solid fa-faucet-drip"></i> Irrigador</div>
+                        <div class="implement-tag"><i class="fa-solid fa-boxes-packing"></i> Arado</div>
                     </div>
                 </div>
             </aside>
@@ -110,17 +116,30 @@
 
             <!-- 4. LATERAL DIREITA: Sede / Armazém de Estoque -->
             <aside class="side-panel right-panel" id="panel-warehouse">
-                <div class="panel-header"><i class="fa-solid fa-house-chimney"></i> Sede</div>
+                <div class="panel-header"><i class="fa-solid fa-house-user"></i> Sede do Fazendeiro</div>
                 <div class="panel-content">
-                    <div class="warehouse-stats">
-                        <i class="fa-solid fa-boxes-stacked"></i>
-                        <span>Armazém: 45/100 Lotes</span>
-                        <div class="progress-bar"><div class="fill" style="width: 45%;"></div></div>
+                    <!-- Detalhes do Personagem -->
+                    <div class="character-card-premium">
+                        <img src="character_portrait.png" alt="Avatar" class="char-miniature">
+                        <div class="char-stats">
+                            <span class="char-name">Gabriel</span>
+                            <span class="char-title">Proprietário Senior</span>
+                        </div>
                     </div>
-                    <div class="house-stats">
-                        <i class="fa-solid fa-house"></i>
-                        <span>Residência: Nv. 2</span>
-                        <small>Skin Equipada: Rústica</small>
+
+                    <!-- Visual da Casa -->
+                    <div class="house-visual-card">
+                        <img src="house_detailed.png" alt="Sede" class="house-render">
+                        <div class="house-badge">Nv. 2</div>
+                    </div>
+
+                    <div class="category-title">Suprimentos e Lotes</div>
+                    <div class="warehouse-stats-premium">
+                        <div class="stat-row">
+                            <span>Sementes Totais</span>
+                            <span class="stat-val">1,240</span>
+                        </div>
+                        <div class="progress-bar-apple"><div class="fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
             </aside>
@@ -223,7 +242,7 @@
     </div>
 
     <!-- Lógica App -->
-    <script src="game.js"></script>
+    <script src="game.js?v=1.0.1"></script>
     <script>
         // Função de Slide-over nativo via CSS Toggle Class Toggle 
         function togglePanel(id) {

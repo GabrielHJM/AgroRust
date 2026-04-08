@@ -1,3 +1,5 @@
+const API_BASE_URL = 'http://localhost:8000/api';
+
 // AGRO RUST WEATHER MANAGER
 class WeatherManager {
     constructor(ui) {
@@ -288,19 +290,32 @@ class InterfaceManager {
     async fetchDeck() {
         const req = await this.authFetch(`${API_BASE_URL}/deck/`);
         const decks = await req.json();
-        this.deckContainer.innerHTML = "";
         
+        // Remove a mensagem de carregamento
+        this.deckContainer.innerHTML = "";
+        const loadingMsg = document.getElementById('deck-loading');
+        if (loadingMsg) loadingMsg.style.display = 'none';
+
         // Mapeamento de Imagens para as Cartas (Baseado no nome/slug)
         const imageMap = {
-            'Trator': 'agrorust_tractor_premium_1775088524505.png',
-            'Colheitadeira': 'agrorust_harvester_premium_1775088568489.png',
-            'Semente de Trigo': 'agrorust_crop_wheat_premium_1775088581666.png',
-            'Sede Modular': 'agrorust_house_premium_1775088542098.png'
+            'Trator': 'tractor.png',
+            'Trator Velho': 'tractor.png',
+            'Mega Trator Turbo': 'tractor.png',
+            'Colheitadeira': 'harvester.png',
+            'Colheitadeira A1': 'harvester.png',
+            'Semente de Trigo': 'wheat.png',
+            'Semente de Tomate': 'wheat.png',
+            'Semente de Milho': 'wheat.png',
+            'Semente de Algodão': 'wheat.png',
+            'Semente de Soja Mística': 'wheat.png',
+            'Rosa de Cristal': 'wheat.png',
+            'Árvore de Ouro': 'wheat.png',
+            'Sede Modular': 'house.png'
         };
 
         if(decks.length > 0) {
             decks[0].cartas_detalhadas.forEach(c => {
-                const img = imageMap[c.nome] || 'agrorust_crop_wheat_premium_1775088581666.png';
+                const img = imageMap[c.nome] || 'wheat.png';
                 const div = document.createElement('div');
                 div.className = `carta-ui rarity-${c.raridade}`;
                 div.setAttribute('draggable', 'true');
@@ -358,15 +373,19 @@ class FarmScene extends Phaser.Scene {
         this.textures.addCanvas('pixel', canvas);
 
         // Carrega Ativos Premium Gerados
-        this.load.image('tractor', 'agrorust_tractor_premium_1775088524505.png');
-        this.load.image('harvester', 'agrorust_harvester_premium_1775088568489.png');
-        this.load.image('house', 'agrorust_house_premium_1775088542098.png');
-        this.load.image('wheat', 'agrorust_crop_wheat_premium_1775088581666.png');
-        this.load.image('character', 'agrorust_character_portrait_1775088507310.png');
+        this.load.image('tractor', 'tractor.png');
+        this.load.image('harvester', 'harvester.png');
+        this.load.image('house', 'house_detailed.png');
+        this.load.image('wheat', 'wheat.png');
+        this.load.image('character', 'character_portrait.png');
+        this.load.image('farm_bg', 'farm_background.png');
     }
 
     create() {
-        this.cameras.main.setBackgroundColor('#455A64');
+        // Adiciona o fundo realista
+        const bg = this.add.image(0, 0, 'farm_bg').setOrigin(0, 0);
+        bg.setDisplaySize(this.scale.width, this.scale.height);
+
         this.drawGrid();
         this.input.on('pointerup', this.handleCanvasDrop, this);
         this.fetchTerrenos();

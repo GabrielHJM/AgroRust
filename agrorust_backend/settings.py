@@ -44,7 +44,7 @@ ROOT_URLCONF = 'agrorust_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'frontend'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,6 +93,10 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATICFILES_DIRS = [
+    BASE_DIR / "frontend",
+]
 
 # REST_FRAMEWORK CONFIG: Trava a API e obriga Login por padrao em todo DRF (JWT)
 REST_FRAMEWORK = {

@@ -3,21 +3,23 @@
 ========================================================= */
 
 :root {
-    --bg-dark: #1e1b18;          /* Fundo base muito escuro, terra escura */
-    --panel-bg: rgba(44, 34, 27, 0.85); /* Madeira translúcida emulando painel de jogo */
-    --panel-border: #6d4c41;     /* Contorno rústico de couro/madeira */
-    --text-light: #fef0d9;       /* Texto bege pastel / papiro */
+    --bg-dark: #0f0d0c;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-text: #ffffff;
+    --text-muted: #b0b0b0;
     --gold: #ffca28;             
     --gems: #ce93d8;
-    --energy: #69f0ae;
-    --gasoline: #ff7043;
-    --shield: #4fc3f7;
-    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --energy: #00e676;
+    --gasoline: #ff5722;
+    --shield: #00b0ff;
+    --font-main: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     
-    /* Variáveis Globais de Tamanho Limpo */
-    --hud-height: 55px;
-    --deck-height: 125px;
-    --panel-width: 250px;
+    /* Variáveis Globais de Tamanho */
+    --hud-height: 64px;
+    --deck-height: 140px;
+    --panel-width: 280px;
+    --radius-premium: 18px;
 }
 
 * {
@@ -31,9 +33,10 @@ body, html {
     height: 100%;
     background-color: var(--bg-dark);
     font-family: var(--font-main);
-    color: var(--text-light);
-    overflow: hidden;    /* Trava de segurança para scroll nativo indesejado WebGame */
-    touch-action: none;  /* Padrão para browsers Mobile para que arraste de carta não de Zoom in */
+    color: var(--glass-text);
+    overflow: hidden;
+    touch-action: none;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
 }
 
 /* =========================================
@@ -51,15 +54,16 @@ body, html {
 ========================================= */
 .hud-top {
     height: var(--hud-height);
-    background: var(--panel-bg);
-    border-bottom: 2px solid var(--panel-border);
+    background: var(--glass-bg);
+    border-bottom: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 15px;
-    backdrop-filter: blur(8px);
+    padding: 0 24px;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     z-index: 50; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 .hud-left, .hud-center, .hud-right {
@@ -72,7 +76,7 @@ body, html {
 .hud-left .avatar-placeholder {
     width: 48px;
     height: 48px;
-    background: url('agrorust_character_portrait_1775088507310.png');
+    background: url('character_portrait.png');
     background-size: cover;
     background-position: center;
     border: 2px solid var(--gold);
@@ -135,10 +139,30 @@ body, html {
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
 
-/* Direita: Economia de Gemas e Ouro */
-.hud-right { font-weight: bold; font-size: 16px; gap: 20px; }
-.hud-right .gold { color: var(--gold); }
-.hud-right .gems { color: var(--gems); }
+.hud-right { font-weight: 600; font-size: 18px; gap: 24px; }
+.hud-right .gold { color: var(--gold); display: flex; align-items: center; gap: 8px; }
+.hud-right .gems { color: var(--gems); display: flex; align-items: center; gap: 8px; }
+
+/* =========================================
+   Glass Panels & Side Panels
+ ========================================= */
+.side-panel {
+    width: var(--panel-width);
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    border: 1px solid var(--glass-border);
+    margin: 12px;
+    border-radius: var(--radius-premium);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.left-panel { margin-right: 0; }
+.right-panel { margin-left: 0; }
 
 
 /* =========================================
@@ -212,21 +236,125 @@ body, html {
     scrollbar-color: var(--panel-border) transparent;
 }
 
-.machine-item, .warehouse-stats, .house-stats {
-    background: rgba(0,0,0,0.5);
+.category-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    margin: 15px 0 8px 0;
+    opacity: 0.9;
+}
+
+.character-card-premium {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
     padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #5d4037;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.char-miniature {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 10px rgba(255, 202, 40, 0.3);
+}
+
+.char-stats {
     display: flex;
     flex-direction: column;
-    font-size: 13px;
+}
+
+.char-name { font-weight: 700; font-size: 15px; }
+.char-title { font-size: 11px; color: var(--text-muted); }
+
+.house-visual-card {
+    position: relative;
+    margin-top: 15px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.house-render {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    padding: 10px;
+}
+
+.house-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--gold);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 10px;
+}
+
+.machine-item-premium {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.2s;
+}
+
+.machine-item-premium:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.02);
+}
+
+.machine-icon {
+    font-size: 20px;
+    color: #fff;
+    opacity: 0.8;
+}
+
+.machine-details { display: flex; flex-direction: column; }
+.machine-name { font-weight: 600; font-size: 13px; }
+.machine-status { font-size: 11px; }
+
+.implements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.implement-tag {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
     gap: 6px;
 }
 
-.machine-item i { font-size: 22px; color: #bcaaa4; margin-bottom: 2px; }
+.progress-bar-apple {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 8px;
+}
 
-.status.online { color: #81c784; font-weight: bold; }
-.status.maintenance { color: #e57373; font-weight: bold; }
+.progress-bar-apple .fill { height: 100%; background: var(--gold); border-radius: 3px; box-shadow: 0 0 10px rgba(255, 202, 40, 0.5); }
 
 .progress-bar {
     width: 100%;

@@ -34,7 +34,36 @@ O projeto valoriza as bases tradicionais de desenvolvimento web em harmonia com 
 
 Siga os passos abaixo para rodar o ambiente de desenvolvimento na sua máquina:
 
-1. **Clone o repositório:**
+1. **Ative o ambiente virtual (venv):**
+   ```powershell
+   .\venv\Scripts\activate
+   ```
+
+2. **Instale as dependências (se necessário):**
    ```bash
-   git clone [https://github.com/seu-usuario/agrorust.git](https://github.com/seu-usuario/agrorust.git)
-   cd agrorust
+   pip install -r requirements.txt
+   ```
+
+3. **Inicie o servidor de desenvolvimento Django:**
+   ```bash
+   python manage.py runserver
+   ```
+   *O backend estará rodando em `http://localhost:8000/`. É necessário que ele esteja ativo para o jogo funcionar.*
+
+4. **Abra o Jogo:**
+   - Navegue até a pasta `frontend/` e abra o arquivo `index.html` em seu navegador.
+   - **Dica:** Para uma melhor experiência e evitar problemas de cache, você pode usar a extensão "Live Server" do VS Code.
+
+5. **Login de Teste:**
+   - **Usuário:** `farmer`
+   - **Senha:** `agrorust123` *(Resetei a senha para facilitar seu teste)*
+
+---
+
+## 🏗️ Estado Atual do Projeto
+
+- [x] Backend Django CRUD + Auth JWT
+- [x] Motor de Jogo Phaser 3 Integrado
+- [x] Sistema de Clima e Regeneração de Recursos
+- [x] Sprites Premium de Maquinário e Edifícios
+- [ ] Sistema de Marketplace (Em desenvolvimento)
